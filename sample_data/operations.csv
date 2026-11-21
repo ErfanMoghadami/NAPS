@@ -1,0 +1,9 @@
+
+operation_id,order_id,machine_id,sequence,setup_time_seconds,processing_time_per_unit_seconds
+OP001,O100,M01,1,600,120
+OP002,O100,M02,2,300,60
+OP003,O100,M03,3,900,180
+OP004,O200,M01,1,600,180
+OP005,O200,M03,2,450,90
+OP006,O300,M02,1,300,90
+OP007,O300,M03,2,600,120

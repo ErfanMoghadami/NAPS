@@ -1,0 +1,6 @@
+
+machine_id,name,available_seconds_per_day,is_active
+M01,CNC Machining,28800,true
+M02,Industrial Drilling,28800,true
+M03,Polishing Machine,21600,true
+M04,Backup CNC,28800,false
