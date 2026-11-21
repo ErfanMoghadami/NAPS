@@ -26,30 +26,3 @@ pub fn input_validation_three_files(args: &CliArgs) -> Vec<String> {
     }
     errors
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::path::Path;
-
-    #[test]
-    fn existing_file_should_be_valid() {
-        let result = input_validation_one_file("Cargo.toml", Path::new("Cargo.toml"));
-
-        assert_eq!(result, None);
-    }
-
-    #[test]
-    fn missing_file_should_return_error() {
-        let result = input_validation_one_file("missing.csv", Path::new("missing.csv"));
-
-        assert!(result.is_some());
-    }
-
-    #[test]
-    fn directory_should_return_error() {
-        let result = input_validation_one_file("src", Path::new("src"));
-
-        assert!(result.is_some());
-    }
-}

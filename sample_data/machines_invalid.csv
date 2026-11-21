@@ -1,0 +1,5 @@
+
+machine_id,name,available_seconds_per_day,is_active
+M01,CNC Machining,28800,true
+M02,   ,0,true
+,Polishing Machine,-120,true
