@@ -1,7 +1,7 @@
 use crate::cli::CliArgs;
 use crate::csv_reader::{machine_csv_reader, operation_csv_reader, order_csv_reader};
+use crate::data_validation::data_validation;
 use crate::input_files::input_validation_three_files;
-
 pub fn app(args: &CliArgs) {
     let all_files_validation = input_validation_three_files(&args);
 
@@ -19,8 +19,15 @@ pub fn app(args: &CliArgs) {
 
     match machines_result {
         Ok(machines) => {
-            println!("Machines loaded successfully:");
-            println!("{machines:#?}");
+            let errors = data_validation(&machines);
+
+            if errors.is_empty() {
+                println!("machine data is valid.")
+            } else {
+                for error in errors {
+                    eprint!("{error}")
+                }
+            }
         }
         Err(error) => {
             eprintln!("Failed to parse machines.csv: {error}");
