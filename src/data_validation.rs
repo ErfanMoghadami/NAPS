@@ -78,6 +78,35 @@ pub fn data_validation_operations(operations: &[Operation]) -> Vec<String> {
     }
     errors
 }
+
+pub fn validation_refrence(
+    machines: &[Machine],
+    orders: &[Order],
+    operations: &[Operation],
+) -> Vec<String> {
+    let mut errors = Vec::new();
+    for operation in operations.iter() {
+        if !machines
+            .iter()
+            .any(|machine| machine.machine_id == operation.machine_id)
+        {
+            errors.push(format!(
+                "machine {} is not valid in operation",
+                operation.machine_id
+            ));
+        }
+        if !orders
+            .iter()
+            .any(|order| order.order_id == operation.order_id)
+        {
+            errors.push(format!(
+                "order {} is not valid in operation",
+                operation.order_id
+            ));
+        }
+    }
+    errors
+}
 #[cfg(test)]
 mod tests {
     use super::*;
