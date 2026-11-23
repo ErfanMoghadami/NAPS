@@ -105,8 +105,20 @@ pub fn validation_refrence(
             ));
         }
     }
+    for order in orders.iter() {
+        if !operations
+            .iter()
+            .any(|operation| operation.order_id == order.order_id)
+        {
+            errors.push(format!(
+                "operation {} has no operations",
+                order.order_id
+            ));
+        }
+    }
     errors
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
