@@ -1,9 +1,7 @@
-use std::fmt::Alignment::Left;
-
 use crate::cli::CliArgs;
 use crate::csv_reader::{machine_csv_reader, operation_csv_reader, order_csv_reader};
 use crate::data_validation::{
-    self, data_validation_machine, data_validation_operations, data_validation_orders,
+    data_validation_machine, data_validation_operations, data_validation_orders,
     validation_refrence,
 };
 use crate::input_files::input_validation_three_files;
@@ -78,7 +76,7 @@ pub fn app(args: &CliArgs) {
             }
         }
         Err(error) => {
-            eprintln!("Failed to parse orders.csv: {error}");
+            eprintln!("Failed to parse operation.csv: {error}");
             None
         }
     };
@@ -92,9 +90,19 @@ pub fn app(args: &CliArgs) {
     match (machines_data, order_data, operations_data) {
         (Some(machines), Some(orders), Some(operations)) => {
             let errors = validation_refrence(&machines, &orders, &operations);
+            if errors.is_empty() {
+                println!("every thing fine lets go");
+            } else {
+                eprintln!("these are the wrong references");
+                for error in errors {
+                    eprintln!("{error}");
+                }
+            }
         }
+
         _ => {
-            eprintln!("cannont validate references:one or more datasets are missing")
+            eprintln!("cannont validate references:one or more datasets are missing");
+            return;
         }
     }
 }
