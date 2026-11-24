@@ -1,3 +1,4 @@
+use crate::business_rules::machine_business_rules;
 use crate::cli::CliArgs;
 use crate::csv_reader::{machine_csv_reader, operation_csv_reader, order_csv_reader};
 use crate::data_validation::{
@@ -81,12 +82,6 @@ pub fn app(args: &CliArgs) {
         }
     };
 
-    // match validation_ref_result {
-    //     Ok(refrences) => {
-    //         let error = validation_refrence(machines_data, order_data, operations_data);
-    //     }
-    // }
-
     match (machines_data, order_data, operations_data) {
         (Some(machines), Some(orders), Some(operations)) => {
             let errors = validation_refrence(&machines, &orders, &operations);
@@ -97,6 +92,10 @@ pub fn app(args: &CliArgs) {
                 for error in errors {
                     eprintln!("{error}");
                 }
+            }
+            let machine_is_active = machine_business_rules(&machines, &operations);
+            if !machine_is_active.is_empty() {
+                eprintln!("{:#?}", machine_is_active)
             }
         }
 
