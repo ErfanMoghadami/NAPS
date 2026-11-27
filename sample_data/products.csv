@@ -1,0 +1,3 @@
+product_id,company_id,code,name,description,base_unit_of_measure,is_active
+P001,C001,PROD-01,Metal Part,Metal component,pcs,true
+P002,C002,PROD-02,Plastic Part,Plastic component,pcs,true

@@ -1,0 +1,3 @@
+routing_step_id,routing_id,sequence,name,setup_time_seconds,processing_time_per_unit_seconds
+RS001,R001,1,CNC Machining,600,120
+RS002,R002,1,Drilling,300,180

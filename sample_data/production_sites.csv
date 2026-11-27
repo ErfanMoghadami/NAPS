@@ -1,0 +1,3 @@
+production_site_id,company_id,code,name,timezone,is_active
+PS001,C001,SITE-01,Alpha Factory,UTC,true
+PS002,C002,SITE-02,Beta Factory,UTC,true
