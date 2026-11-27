@@ -12,6 +12,12 @@ pub struct CliArgs {
 
     #[arg(long)]
     pub operations: PathBuf,
+
+    #[arg(long)]
+    pub machines_capability: PathBuf,
+
+    #[arg(long)]
+    pub companies:PathBuf
 }
 
 pub fn cli() -> CliArgs {

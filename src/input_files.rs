@@ -24,5 +24,10 @@ pub fn input_validation_three_files(args: &CliArgs) -> Vec<String> {
     if let Some(error) = input_validation_one_file("operations.csv", &args.operations) {
         errors.push(error);
     }
+    if let Some(error) = input_validation_one_file("machine_capability", &args.machines_capability)
+    {
+        errors.push(error);
+    }
+    
     errors
 }

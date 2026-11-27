@@ -1,9 +1,11 @@
 use crate::business_rules::machine_business_rules;
 use crate::cli::CliArgs;
-use crate::csv_reader::{machine_csv_reader, operation_csv_reader, order_csv_reader};
+use crate::csv_reader::{
+    companies_csv_reader, machine_csv_reader, operation_csv_reader, order_csv_reader,
+};
 use crate::data_validation::{
-    data_validation_machine, data_validation_operations, data_validation_orders,
-    validation_refrence,
+    data_validation_companies, data_validation_machine, data_validation_operations,
+    data_validation_orders, validation_refrence,
 };
 use crate::input_files::input_validation_three_files;
 
@@ -82,9 +84,29 @@ pub fn app(args: &CliArgs) {
         }
     };
 
-    match (machines_data, order_data, operations_data) {
-        (Some(machines), Some(orders), Some(operations)) => {
-            let errors = validation_refrence(&machines, &orders, &operations);
+    let company_result = companies_csv_reader(&args.companies);
+    let company_data = match company_result {
+        Ok(companies) => {
+            let errors = data_validation_companies(&companies);
+            if errors.is_empty() {
+                println!("company data is valid.");
+                Some(companies)
+            } else {
+                for error in errors {
+                    eprintln!("{error}")
+                }
+                None
+            }
+        }
+        Err(error)=>{
+            eprintln!("Faild to parse companies.csv: {error}");
+            None
+        }
+    };
+
+    match (machines_data, order_data, operations_data,company_data) {
+        (Some(machines), Some(orders), Some(operations),Some(companies)) => {
+            let errors = validation_refrence(&machines, &orders, &operations, &companies);
             if errors.is_empty() {
                 println!("every thing fine lets go");
             } else {

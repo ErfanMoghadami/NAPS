@@ -1,26 +1,30 @@
-use crate::models::{Machine, Operation, Order};
+use crate::models::{Company, Machine, Operation, Order};
+use std::collections::HashSet;
 
 pub fn data_validation_machine(machines: &[Machine]) -> Vec<String> {
-    let mut errors: Vec<String> = Vec::new();
+    let mut errors = Vec::new();
 
     for (index, machine) in machines.iter().enumerate() {
         let row = index + 2;
 
-        // Validate machine_id
         if machine.machine_id.trim().is_empty() {
             errors.push(format!("Row {row}: machine_id cannot be empty"));
         }
 
-        // Validate name
-        if machine.name.trim().is_empty() {
-            errors.push(format!("Row {row}: machine name cannot be empty"));
+        if machine.company_id.trim().is_empty() {
+            errors.push(format!("Row {row}: company_id cannot be empty"));
         }
 
-        // Validate available_seconds_per_day
-        if machine.available_seconds_per_day <= 0 {
-            errors.push(format!(
-                "Row {row}: available_seconds_per_day must be greater than zero"
-            ));
+        if machine.production_site_id.trim().is_empty() {
+            errors.push(format!("Row {row}: production_site_id cannot be empty"));
+        }
+
+        if machine.code.trim().is_empty() {
+            errors.push(format!("Row {row}: machine code cannot be empty"));
+        }
+
+        if machine.name.trim().is_empty() {
+            errors.push(format!("Row {row}: machine name cannot be empty"));
         }
     }
 
@@ -34,48 +38,92 @@ pub fn data_validation_orders(orders: &[Order]) -> Vec<String> {
         let row = index + 2;
 
         if order.order_id.trim().is_empty() {
-            errors.push(format!("row {row}: order is cant be empty"));
+            errors.push(format!("Row {row}: order_id cannot be empty"));
         }
-        if order.product.trim().is_empty() {
-            errors.push(format!("row {row}: product is cant be empty"));
+
+        if order.company_id.trim().is_empty() {
+            errors.push(format!("Row {row}: company_id cannot be empty"));
         }
+
+        if order.product_id.trim().is_empty() {
+            errors.push(format!("Row {row}: product_id cannot be empty"));
+        }
+
+        if order.routing_id.trim().is_empty() {
+            errors.push(format!("Row {row}: routing_id cannot be empty"));
+        }
+
         if order.quantity <= 0 {
-            errors.push(format!("row {row}: quantity cant be zero or under zero"));
-        }
-        if chrono::DateTime::parse_from_rfc3339(&order.due_at).is_err() {
-            errors.push(format!("Row {row}: due_at is not a valid RFC3339 date"));
+            errors.push(format!("Row {row}: quantity must be greater than zero"));
         }
     }
+
     errors
 }
 
 pub fn data_validation_operations(operations: &[Operation]) -> Vec<String> {
-    let mut errors: Vec<String> = Vec::new();
+    let mut errors = Vec::new();
 
     for (index, operation) in operations.iter().enumerate() {
         let row = index + 2;
 
-        if operation.machine_id.trim().is_empty() {
-            errors.push(format!("Row {row}: machine_id cannot be empty"));
-        }
-        if operation.order_id.trim().is_empty() {
-            errors.push(format!("row {row}: order is cant be empty"));
-        }
         if operation.operation_id.trim().is_empty() {
-            errors.push(format!("row {row} : operation id cant be empty "));
+            errors.push(format!("Row {row}: operation_id cannot be empty"));
         }
-        if operation.processing_time_per_unit_seconds < 0 {
-            errors.push(format!("row {row} : setup_time_seconds cannot be negative"));
+
+        if operation.order_id.trim().is_empty() {
+            errors.push(format!("Row {row}: order_id cannot be empty"));
         }
-        if operation.sequence <= 0 {
-            errors.push(format!("Row {row}: sequence must be greater than zero"));
+
+        if operation.routing_step_id.trim().is_empty() {
+            errors.push(format!("Row {row}: routing_step_id cannot be empty"));
         }
+
+        if let Some(machine_id) = &operation.fixed_machine_id {
+            if machine_id.trim().is_empty() {
+                errors.push(format!("Row {row}: fixed_machine_id cannot be empty"));
+            }
+        }
+
+        if operation.setup_time_seconds < 0 {
+            errors.push(format!("Row {row}: setup_time_seconds cannot be negative"));
+        }
+
         if operation.processing_time_per_unit_seconds <= 0 {
             errors.push(format!(
                 "Row {row}: processing_time_per_unit_seconds must be greater than zero"
             ));
         }
+
+        if operation.sequence == 0 {
+            errors.push(format!("Row {row}: sequence must be greater than zero"));
+        }
     }
+
+    errors
+}
+
+pub fn data_validation_companies(companies: &[Company]) -> Vec<String> {
+    let mut errors = Vec::new();
+    let mut seen_ids = HashSet::new();
+
+    for company in companies {
+        if company.company_id.trim().is_empty() {
+            errors.push("Company ID cannot be empty".to_string());
+        }
+
+        if !seen_ids.insert(company.company_id.clone()) {
+            errors.push(format!("Duplicate company ID: {}", company.company_id));
+        }
+
+        if company.name.trim().is_empty() {
+            errors.push(format!(
+                "Company name cannot be empty (ID: {})",
+                company.company_id
+            ));
+        }
+    }
+
     errors
 }
 
@@ -83,42 +131,74 @@ pub fn validation_refrence(
     machines: &[Machine],
     orders: &[Order],
     operations: &[Operation],
+    companies: &[Company],
 ) -> Vec<String> {
     let mut errors = Vec::new();
+
+    // Operation -> Order
     for operation in operations.iter() {
-        if !machines
-            .iter()
-            .any(|machine| machine.machine_id == operation.machine_id)
-        {
-            errors.push(format!(
-                "machine {} is not valid in operation",
-                operation.machine_id
-            ));
-        }
         if !orders
             .iter()
             .any(|order| order.order_id == operation.order_id)
         {
             errors.push(format!(
-                "order {} is not valid in operation",
-                operation.order_id
+                "Order {} referenced by operation {} does not exist",
+                operation.order_id, operation.operation_id
             ));
         }
+
+        // Operation -> Fixed Machine (only when assigned)
+        if let Some(machine_id) = operation.fixed_machine_id.as_deref() {
+            if !machines
+                .iter()
+                .any(|machine| machine.machine_id.as_str() == machine_id)
+            {
+                errors.push(format!(
+                    "Machine {} referenced by operation {} does not exist",
+                    machine_id, operation.operation_id
+                ));
+            }
+        }
     }
+
+    // Order -> Operation
     for order in orders.iter() {
         if !operations
             .iter()
             .any(|operation| operation.order_id == order.order_id)
         {
+            errors.push(format!("Order {} has no operations", order.order_id));
+        }
+    }
+
+    // Machine -> Company
+    for machine in machines.iter() {
+        if !companies
+            .iter()
+            .any(|company| company.company_id == machine.company_id)
+        {
             errors.push(format!(
-                "operation {} has no operations",
-                order.order_id
+                "Company {} referenced by machine {} does not exist",
+                machine.company_id, machine.machine_id
             ));
         }
     }
+
+    // Order -> Company
+    for order in orders.iter() {
+        if !companies
+            .iter()
+            .any(|company| company.company_id == order.company_id)
+        {
+            errors.push(format!(
+                "Company {} referenced by order {} does not exist",
+                order.company_id, order.order_id
+            ));
+        }
+    }
+
     errors
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
